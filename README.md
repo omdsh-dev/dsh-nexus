@@ -18,7 +18,7 @@ Then for the future releases, you can run `pnpm run release` to do the release a
 
 ## License
 
-[MIT](./LICENSE) License © [dsh-tauri-desk](https://github.com/dsh-tauri-desk)
+[Apache-2.0](./LICENSE) License © [Oh My DSH](https://github.com/omdsh-dev)
 
 <!-- Badges -->
 
@@ -28,7 +28,7 @@ Then for the future releases, you can run `pnpm run release` to do the release a
 [npm-downloads-href]: https://npmx.dev/package/pkg-placeholder
 [bundle-src]: https://img.shields.io/bundlephobia/minzip/pkg-placeholder?style=flat&colorA=080f12&colorB=1fa669&label=minzip
 [bundle-href]: https://bundlephobia.com/result?p=pkg-placeholder
-[license-src]: https://img.shields.io/github/license/antfu/pkg-placeholder.svg?style=flat&colorA=080f12&colorB=1fa669
-[license-href]: https://github.com/antfu/pkg-placeholder/blob/main/LICENSE
+[license-src]: https://img.shields.io/github/license/omdsh-dev/dsh-nexus.svg?style=flat&colorA=080f12&colorB=1fa669
+[license-href]: https://github.com/omdsh-dev/dsh-nexus/blob/main/LICENSE
 [jsdocs-src]: https://img.shields.io/badge/jsdocs-reference-080f12?style=flat&colorA=080f12&colorB=1fa669
 [jsdocs-href]: https://www.jsdocs.io/package/pkg-placeholder
