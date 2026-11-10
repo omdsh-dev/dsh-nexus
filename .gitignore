@@ -4,6 +4,7 @@
 *.log
 *.tgz
 coverage
+docs/draw/
 lib-cov
 logs
 node_modules
