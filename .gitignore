@@ -12,7 +12,9 @@ temp
 
 # Ignore generated npm skills, while keeping project-owned skills visible
 .agents/skills
+.claude/skills
 **/skills/*
 !**/skills/*/
 !**/skills/*/**
 **/skills/npm-*
+prisma/database
