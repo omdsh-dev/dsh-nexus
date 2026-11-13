@@ -83,7 +83,7 @@ Worker ask(askTo='project')   ─▶ Inbox(type=project)    只在代理之间�
 
 一张工单可以一边 `running` 一边等人 —— 把 `status` 覆盖掉会丢掉它本来跑到哪一步。
 所以「需介入」是派生出来的：**存在指向它的 pending ask 就是需介入**。
-面板和 `list_tasks` 用一次子查询就能得到。
+面板和 `list_ticket` 用一次子查询就能得到。
 
 ## 三条书写约定
 

@@ -9,6 +9,7 @@ export default antfu(
       'pnpm/yaml-enforce-settings': 'off',
     },
     ignores: [
+      'soruce/*',
       'src/database/types.ts',
     ],
   },

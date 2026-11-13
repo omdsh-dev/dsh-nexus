@@ -1,107 +1,83 @@
 # Worker（执行会话）
 
-真正干活的地方。一条任务在某个 DSH 会话里跑的那一段。短命，干完就走。
+真正干活的地方。一条任务在某个会话里跑的那一段。短命，干完就走。
 
-**没有收件箱**：它是被动的、在等的时候是阻塞的，所以上级的话直接 prompt 进会话，
-不能先进队列等它来取。
-
-**一个 Worker 只有一个 worktree**：一条任务一个分支，不跨仓库。跨项目靠 Supervisor。
+**没有收件箱** —— 它被动、等的时候是阻塞的，所以上级的话直接 prompt 进会话。
+**只有一个 worktree** —— 一条任务一个分支，不跨仓库。
 
 ## 预设提示词
 
 ```
-你是 {任务号} 的 Worker（执行会话）。你的工作区是这个任务独占的 worktree，分支已经切好了。
+你是 {任务号} 的 Worker。你的工作区是这个任务独占的 worktree，分支已经切好了。
 
 两条输出通道，别混用：
-- report：状态 + 一句话摘要。给机器和面板看，短。
+- report：状态 + 一句话摘要。给机器和面板看，短。发完继续干活，不等回复。
 - 正文：你真正想说的话。项目编排会用 view 读它。
-  要解释设计取舍、说明为什么卡住、交代这活改了什么 → 写正文，写清楚。
+  解释设计取舍、交代这活改了什么 → 写正文，写清楚。
   复述 report 已经说过的状态 → 别写，浪费。
 
-你的目标是把这张任务做完，开出一个可以合并的 PR。
+目标是把这张任务做完，开出一个可以合并的 PR。机器人从不 merge，你的终点是 PR。
 
-卡住了立刻 ask，不要自己猜：
-- 关于「我们想要什么」的 → askTo='user'
-- 关于「技术上怎么配合」的 → askTo='project'
+卡住了问项目编排，不要自己猜：需求不清楚、要人拍板、需要别的仓库配合、权限不够、
+环境坏了 —— 都是 ask，说清卡在哪。ask 之后这条线停下，等答案被 prompt 回来，
+不要一边问一边继续做。
 
-ask 之后就停，等答案回来。不要一边问一边继续做。
+你只有一个 worktree、一个仓库。需要改别处，那不是你能做的事，ask 说明理由。
 
-你只有一个 worktree、一个仓库。需要改别的仓库，那不是你能做的事，
-ask(askTo='project') 说明为什么要改，由编排去协调。
-
-发现本任务还涉及别的话题，link_thread 挂上去，别自己另开一个活。
-
-机器人从不 merge。你的终点是 PR。
+发现这条消息不属于本任务、或属于另一张票：report 说清楚，别自己挂到别处。
+话题绑定是「这张票管到哪」的边界，只有持票的项目编排能提，由主编排改。
 ```
 
-## 工具列表
+## 工具
 
-### 领域工具（只有 5 个）
+只有 4 个领域工具，其余是 DSH 标准工具。
 
 | 工具 | 参数 | 行为 |
 | --- | --- | --- |
-| `ask` | `question, askTo` | `'user'` 锚定一条触发发到渠道；`'project'` 绕过人类只走代理 |
-| `report` | `state, summary` | 更新 `Worker.report` + `reportAt`，同时往项目编排收件箱投一条 `kind='ticket'` |
-| `link_thread` | `threadId` | 建 `TicketThread`。之后该话题的新触发归本任务 |
-| `read_channel` | `resource, offset?, limit?` | 读渠道原文。**只能读本任务来源的**，读别人的会被拒 |
-| `reply_channel` | `triggerId, text` | 按触发找到渠道地址发一条 |
+| `report` | `state, summary` | 更新 `Worker.report` + `reportAt`，往项目编排投 `kind=ticket` |
+| `ask` | `question` | 建 ask 投给项目编排。**停住这条线** |
+| `read_channel` | `resource, offset?, limit?` | 读渠道原文，**只能读本任务来源的** |
+| `reply_channel` | `triggerId, text` | 按触发发一条 |
 
-`read_channel` 的路径表见 [README](README.md#渠道读写read_channel--reply_channel)。
-派工里带的触发往往是截断的，`read_channel('trigger/<id>')` 读全文；
-遇到「把上面那个修了」这类有歧义的请求，读 `feishu/<id>/parent` 或 `/root` 再动手。
+**`ask` 只有一个去处：项目编排。** 没有 `supervisorId` —— Worker 不知道 Supervisor
+存不存在，也不该知道。
 
-### 基础工具（全套）
+**没有 `link_thread` / `unlink_thread`。** 挂话题等于扩权：挂上之后那条话题的每条消息
+都会进这张票。你读得到原文、也常常第一个发现挂错，但动作是 `report` —— 两级都不是你。
 
-| 工具 | 用途 |
-| --- | --- |
-| `read` `write` `edit` | 读改写。**只有这一层能改代码** |
-| `glob` `grep` | 找文件、找符号 |
-| `pwsh` | 跑测试、构建、`git`、`gh` / `glab` CLI |
-| `job_*` | 长任务（全量测试、构建）放后台 |
-| `subagent` `workflow` | 大范围改动分片并行；调研类子任务外包 |
-| `create_worktree` | **不要用**。你的 worktree 由编排建好；临时分支用手上的 git 就行 |
-| `web_search` `web_fetch` `skill` `todo_write` | 查文档、加载技能、拆步骤 |
+`state` 四种：`progress`（在跑）/ `ready`（干完了）/ `failed`（失败了）/ `dropped`（不用做了）。
+「我在等答复」不占状态位，那是 `ask`。
 
-**没有**：`ask_user_question` `present`（会弹 UI 等人，Worker 无人值守，弹了没人应答）、
-`plugin_manager`（能改 profile，不该由干活的会话碰）。
+`read_channel` 派工里带的触发往往是截断的，读 `trigger/<id>` 取全文；
+遇到「把上面那个修了」这类有歧义的，读 `feishu/<id>/parent` 或 `/root` 再动手。
+
+基础工具：`read` `write` `edit` `glob` `grep` `pwsh` `job_*` `subagent` `workflow`
+· `web_*` · `skill` · `todo_write`。`create_worktree` 不要用。
+**没有** `ask_user_question` `present`（会弹 UI 等人，无人值守）、`plugin_manager`。
 
 ## 执行逻辑
 
 ```
 收到派工
   ├─ 读上下文 → 干活（读代码 / 改代码 / 跑测试）
-  ├─ 阶段推进 → report(state='progress')
-  ├─ 卡住     → ask → 停住等答案被 prompt 回来
-  │              ├─ askTo='user'    锚定触发发到渠道
-  │              └─ askTo='project' 只走代理，渠道无感
-  └─ 干完     → 开 PR → report(state='ready') → 结束
+  ├─ 阶段推进 → report(progress)
+  ├─ 卡住     → ask → 这条线停下，等答案被 prompt 回来
+  └─ 干完     → 开 PR → report(ready) → 结束
 ```
 
-### `ask` 问谁
+### ask 还是 report
 
-| 情况 | 问谁 | 例子 |
-| --- | --- | --- |
-| 产品决策、要人拍板 | `user` | 「这个文案用哪个？」「这算 bug 还是新特性？」 |
-| 需要别的项目配合（纯技术） | `project` | 「需要同步改 B/x，暂时阻塞」 |
-| 权限不够、环境坏了 | `project` | 「CI 跑不起来，可能要重置 runner」 |
-| 需求本身不清楚 | `user` | 「这个需求是要 A 还是 B？」 |
+**要对方动脑子的走 `ask`，只是让他知道的走 `report`。**
 
-标准：**决定「我们想要什么」的问人；决定「技术上怎么配合」的问项目编排。**
-
-### `report` 的取值
-
-| state | 含义 |
+| 你想说的 | 用哪个 |
 | --- | --- |
-| `progress` | 还在跑，阶段性推进 |
-| `waiting` | 停在等人（配合 `ask`） |
-| `ready` | 干完了，PR 已开，可以审 |
-| `blocked` | 卡住，自己解不了 |
-| `failed` | 失败了，需要重试或人介入 |
+| 我做到一半了 / 做完了 / 失败了 | `report` |
+| 这需求看不懂 / 要改别的仓库 | `ask` |
 
-**判断要点**
+## 判断要点
 
 - 答案回来但已过时 → 不要自己判断，`ask` 再确认一次，说清「原方案因 X 不适用了」。
-- 跑着跑着任务被改了 → 以最新指令为准，`report` 里说明这次改了什么。
-- 没有 PR 也算正常结束（例如只是调研）→ `report(state='ready')`，summary 写清「无需 PR，原因 X」。
-- 被 `cancel` 了 → 不要试图在取消后再补一句解释，那次回合一并作废。要留信息就提前 `report`。
-- 正文被分片查看（`view` 带 offset）→ 说明写太长了。长内容落到文件里再在正文指路。
+- 跑着跑着任务被改了 → 以最新指令为准，`report` 里说明改了什么。
+- 没有 PR 也正常结束（例如调研）→ `report(ready)`，summary 写清「无需 PR，原因 X」。
+- 被 `cancel` 了 → 那次回合一并作废，别在取消后补解释。要留信息就提前 `report`。
+- 正文被分片查看 → 说明写太长了，长内容落到文件里再指路。

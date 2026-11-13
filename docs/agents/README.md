@@ -1,142 +1,128 @@
 # Nexus 代理
 
-四个代理，三层架构 + 一个临时协调者：
-
 ```
-主编排（main）     全局唯一，只分诊派活
- ├─ 项目编排（project）   每项目一个，管任务、指挥 Worker
- │    └─ Worker（执行会话）     真正干活，有写权限，一个 worktree
- └─ 临时 Supervisor        跨项目时临时拉起，用完即弃
+主编排 main      全局唯一，只定「归谁、做不做」
+ ├─ 项目编排 project   每项目一个，管任务、指挥 Worker
+ │    └─ Worker        真正干活，独占一个 worktree
+ └─ Supervisor         跨项目时临时拉起，用完即弃
 ```
 
-| 文件 | 收件箱 | 能改代码 |
-| --- | --- | --- |
-| [main.md](main.md) | `type='main'` | ❌ 只写笔记 |
-| [project.md](project.md) | `type='project'` | ❌ 只写笔记 |
-| [worker.md](worker.md) | **无**，上级直接插话 | ✅ |
-| [supervisor.md](supervisor.md) | `type='supervisor'` | ❌ 只写笔记 |
+| 文件 | 收件箱 | 改代码 | cwd |
+| --- | --- | :-: | --- |
+| [main.md](main.md) | `type=main` | ❌ 只写笔记 | `~/.nexus/notes/main/` |
+| [project.md](project.md) | `type=project` | ❌ 只写笔记 | `~/.nexus/notes/project/<id>/` |
+| [worker.md](worker.md) | **无** | ✅ | 任务 worktree |
+| [supervisor.md](supervisor.md) | `type=supervisor` | ❌ 只写笔记 | `~/.nexus/notes/supervisor/` |
 
-## 共用约定
+cwd 是**笔记区**，不是仓库。仓库在 `Project.directory`，用绝对路径读。
+`write` 因此天然被关在笔记里 —— 想写代码得用绝对路径，而那要走沙箱。
 
-**工作目录 = 笔记工作区**，不是仓库。仓库在 `Project.directory`。
+**一条分界线：main 管归属，project 管执行。** 下面所有例外都是从它推出来的。
 
-| 代理 | cwd | 读代码 |
-| --- | --- | --- |
-| 主编排 / Supervisor | `~/.nexus/notes/<role>/` | 绝对路径指向 `Project.directory` |
-| 项目编排 | `~/.nexus/notes/project/<id>/` | 同上 |
-| Worker | 任务 worktree（独占） | 就在脚下 |
+## 工具矩阵
 
-这样 `write` 天然被关在笔记里：相对路径写出去的是笔记，不是代码。
+这是工具归属的唯一出处，各 agent 文件只列自己的。
 
-**工具分层**：
-
-| 工具 | 主编排 | 项目编排 | Worker | Supervisor |
+| 工具 | main | project | worker | supervisor |
 | --- | :-: | :-: | :-: | :-: |
 | `read` `glob` `grep` | ✅ | ✅ | ✅ | ✅ |
-| `write` `edit` | ✅ 笔记 | ✅ 笔记 | ✅ worktree | ✅ 笔记 |
-| `pwsh` | ✅ 只读 | ✅ | ✅ | ✅ 只读 |
-| `read_channel` `reply_channel` | ✅ | ✅ | ✅ 只读本任务来源 | ✅ |
-| `job_*` | ❌ | ✅ | ✅ | ❌ |
-| `subagent` | ❌ | ✅ | ✅ | ❌ |
+| `write` `edit` | 笔记 | 笔记 | worktree | 笔记 |
+| `pwsh` | 只读 | ✅ | ✅ | 只读 |
+| `job_*` `subagent` | ❌ | ✅ | ✅ | ❌ |
+| `ask_user` | ✅ | ❌ | ❌ | ❌ |
+| `answer` | ✅ | ❌ | ❌ | ✅ |
+| `escalate` | ❌ | ✅ | ❌ | ❌ |
+| `report` `ask` | ❌ | ✅ | ✅ | ✅ |
+| `read_channel` | ✅ | ✅ | 限本任务 | 只读 |
+| `reply_channel` | ✅ | ✅ | ✅ | ❌ |
 | `ask_user_question` `present` | ❌ | ❌ | ❌ | ❌ |
+| `triage_thread` `create_ticket` | ✅ | ❌ | ❌ | ❌ |
+| `attach_thread_to_ticket` `unlink_thread` | ✅ | ❌ | ❌ | ❌ |
+| `dispatch_ticket` `note_ticket` | ✅ | ❌ | ❌ | ✅ |
+| `list_ticket` | 全局 | 本项目 | ❌ | 关联的 |
+| `supervisor_list` | 全字段 | 本项目明细 | ❌ | ❌ |
+| `create_supervisor` `close_supervisor` | ✅ | ❌ | ❌ | ❌ |
+| `attach_tickets_to_supervisor` `detach_tickets_from_supervisor` | ✅ | ❌ | ❌ | ❌ |
+| `link_ticket` `stop_ticket` `retry_ticket` | ❌ | ✅ | ❌ | ❌ |
+| `create_worker` `send` `view` `cancel` `rename` | ❌ | ✅ | ❌ | ❌ |
+| `link_dependency` | ❌ | ❌ | ❌ | ✅ |
 
-几条理由：
+四条不显然的：
 
-- **`job_*` 不给主编排**：官方要求主编排「永远不等」。它一挂起，新触发就没人分诊。
-- **`ask_user_question` 全都不给**：问人只走领域工具 `ask`（会写 Inbox 行）。两条路必然打架。
-- **`write` 按目录切不按角色切**：编排层确实需要记草稿，但写不到代码就够了。
-- **渠道读写四个角色都有**：`read_channel` 一套路径、`reply_channel` 一个锚点，
-  不给每个渠道造一对工具。Worker 的 `read_channel` 有范围限制（只能读自己任务的来源）。
+- **没人能直接写工单状态。** 状态由 `report`、插件观测、引擎推导三处产生。
+  编排想结单只能 `stop_ticket`，而它必须绑一条 `human=true` 的触发。
+- **没人能自己收工。** Supervisor 的 `closed` 是插件按事实推出来的，没有 `close_self`。
+- **`job_*` 不给 main / supervisor**：一挂起就没人分诊、没人协调。
+- **Worker 没有 `link_thread`**：挂话题等于扩权（挂上之后那条话题的每条消息都进这张票）。
+  它读得到原文、也常常第一个发现挂错，但动作是 `report` 说出来。
 
-**渠道提示词**：
+## 汇报与求助
 
-每个渠道的用法说明是 `assets/skills/nexus-channel-<id>/SKILL.md`，
-和官方 `skills/dsh-superagent-github/SKILL.md` 同一套形式。
+同名工具在不同角色上**参数不同，各自一份定义**：
 
-**所有角色都读得到，不按角色分配。** 这正是 skill 机制的意义：
-模型按当前任务自己决定 load 哪份，而不是我们在代码里替它猜。
-详见 [prisma/README.md 的「渠道提示词」](../../prisma/README.md#渠道提示词不在数据库里)。
-
-**问人 / 问上级只有两个动作**：
+| 工具 | 谁有 | 发给谁 | 等不等 |
+| --- | --- | --- | :-: |
+| `report(state, summary)` | worker / supervisor | 各自的上级 | ❌ |
+| `report(state, summary, supervisorId?, ticketId?)` | project | main，带 `supervisorId` 则 supervisor | ❌ |
+| `ask(question)` | worker / supervisor | 各自的上级 | ✅ |
+| `ask(question, supervisorId?, ticketId?)` | project | main，带 `supervisorId` 则 supervisor | ✅ |
+| `escalate(askId)` | project | main，原样转 | — |
+| `ask_user(question, triggerId?)` | main | 人类 | ✅ |
 
 ```
-ask(question, to='user' | 'main' | 'project')   有问题要问
-escalate(askId)                                这条我答不了，原样上交
+worker     → project
+project    → main          （给 supervisorId 则 → supervisor）
+supervisor → main
+main       → user（ask_user）
 ```
 
-`ask` 是问一件**新事**；`escalate` 是**同一个问题**换个人答。用错会导致重复提问或凭空冒出问题。
+`supervisorId` 只有 project 能填 —— Worker 不知道 Supervisor 存在，Supervisor 没有下级。
 
-## 渠道读写：`read_channel` / `reply_channel`
+**`report` 说事实，`ask` 要决定。** `state` 四种：`progress` / `ready` / `failed` / `dropped`。
+「我在等答复」不占状态位，那是 `ask`。
 
-四个角色**都有**这两个工具，一对读、一对写。渠道的细节怎么用，由
-`assets/skills/nexus-channel-<id>/SKILL.md` 教 —— 工具只说"能读/能写"，skil 说"怎么读/怎么写"。
+`ask` 挂起的是**这条工作线**，不是会话：Worker 停下等，项目编排继续处理别的票。
 
-### `read_channel(resource, offset?, limit?)`
+## main 的三个强制下行
 
-一个通用读取器，靠**路径前缀**分发到不同渠道。不是每加一个渠道就加一个工具。
+这三个动作**自动**给项目编排投 `Inbox(type=project, kind=notice)`，调用方不用另外发：
 
-| 路径 | 读什么 |
+| 动作 | 项目编排收到什么 | `reason` |
+| --- | --- | :--: |
+| `attach_tickets_to_supervisor` | 你的票被划进某个 Supervisor | — |
+| `detach_tickets_from_supervisor` | 你的票退回给你自己管 | ✅ 必填 |
+| `close_supervisor` | 协调者没了，附你名下哪些票受影响 | ✅ 必填 |
+
+`detach` / `close` 的 `reason` 是**给它们看的指令**，不是日志：那几张票接下来是收尾、是停、
+还是继续等另开的协调，全靠这句话。不给就只能等它 `ask` 回来问一轮。
+投递**按项目去重** —— 一个项目有几张票也只收一条。
+
+## 渠道
+
+工具只有一对，具体路径和写法由 `assets/skills/nexus-channel-<id>/SKILL.md` 教。
+
+**`read_channel(resource, offset?, limit?)`** 靠路径前缀分发，不按渠道造工具：
+
+| 前缀 | 例子 |
 | --- | --- |
-| `github/issues/<n>` | issue 描述 |
-| `github/issues/<n>/comments` | 对话评论 |
-| `github/pulls/<n>` | PR 描述 |
-| `github/pulls/<n>/comments` | review 评论 |
-| `github/pulls/<n>/thread/<comment-id>` | 一条 review 串（含它首条评论为根） |
-| `github/pulls/<n>/reviews` | review 列表 |
-| `github/pulls/<n>/checks` | CI 状态 |
-| `feishu/<trigger-id>/message` | 源消息本身 |
-| `feishu/<trigger-id>/root` | 所在话题串的首条 |
-| `feishu/<trigger-id>/parent` | 它回复的那条（含合并转发） |
-| `feishu/<trigger-id>/thread` | 整个话题串 |
-| `feishu/<trigger-id>/around` | 周边聊天：前 5 条 + 本条 + 后 5 条，可继续往前翻 |
-| `trigger/<id>` | 一条触发 + 它回复的那条 + 同话题上的前后各一条 |
-| `thread/<key>` | 一个话题：标题、链接、关联任务、最新触发 |
-| `ticket/<id>` | 一个任务的卡片、Worker、最近汇报 |
+| `github/` | `github/pulls/81/thread/123`、`.../checks` |
+| `feishu/` | `feishu/<trigger-id>/message` · `/root` · `/parent` · `/thread` · `/around` |
+| `trigger/` `thread/` `ticket/` | 我们自己的领域数据 |
 
-**返回形状统一**：
+返回 `{ items, next_offset, next_resource }`。**两条翻页轴都要跟完**，否则会误判「读完了」。
 
-```
-{ items: [...], next_offset: number | null, next_resource: string | null }
-```
+**`reply_channel(triggerId, text)`** 锚点是 `triggerId`。bot 身份、像人话、100 词上限。
+排队成功 ≠ 送达。
 
-- `next_offset` 本地翻页（同一批数据往后读）
-- `next_resource` 远端游标翻页（渠道侧还有下一页）
-- **offset 0 重新读；之后的 offset 读同一份快照**，不会因为数据变了而错位
-- 一页默认 20 条，上限 50
+## skill
 
-**两条翻页轴必须都跟完**，否则会误判"读完了"。
+渠道说明是 `assets/skills/nexus-channel-<id>/SKILL.md`，三段式：frontmatter `name` +
+`description` + 正文。**所有角色都能读，不按角色分配** —— catalog 只暴露 `description`，
+模型按当前任务自己决定 load 哪份。见 [prisma/README.md](../../prisma/README.md#渠道提示词)。
 
-**权限**：Worker 只能读自己任务来源的内容（`TicketThread` 关联的话题、派工带来的触发）。
-读别人的触发会被拒。主编排 / 项目编排 / Supervisor 不受此限。
+## 为什么没有 `wait`
 
-### `reply_channel(triggerId, text)`
+依赖关系已经在库里（`TicketLink`、`SupervisorTicket`），再在会话里存一份「我在等谁」，
+两份状态必然漂移，且不跨重启。
 
-按触发找到渠道地址发一条。**锚点是 `triggerId`** —— 一个问题只会锚在一条触发上，
-不用猜发到哪个会话。
-
-规则：
-
-- bot 身份发言，语气像人话，不是报告体
-- 100 词硬上限（飞书按分词算，Markdown 链接标签和地址都算）
-- 不要重复对方已说的话
-- 排队成功 ≠ 送达。投递失败会另行通知
-
-### 为什么不做成每个渠道一对工具
-
-官方是 `orchestrator_read` + `orchestrator_reply` 两个通用工具，配一张
-`RESOURCES` 资源表 + skill 教细节。我们照抄这个形状。
-
-每加一个渠道就加两个工具的话，工具列表会随渠道数线性膨胀，
-而模型选错工具的概率也会随之上升。路径前缀 + skill 的组合没有这个问题。
-
-## 被否掉的：`wait`（阻塞等待子会话）
-
-方案里建议给项目编排一个 `wait(sessionIds[])`，同时等多个 Worker。**不做**：
-
-- DSH 是通知式的（`steer` + 排队一轮 + 子会话结束自动通知），Worker 的 `report`
-  本来就会叫醒项目编排。再加一套阻塞机制，两套唤醒来源必然打架。
-- 阻塞最危险的地方：等 A 时 B 来问了，B 一起等。「可中断」能缓解，但依赖运行时支持
-  「阻塞中的工具调用被外部消息打断」，这个能力现在没把握假设它存在。
-
-替代：`send` 后立刻 `view` 确认听懂了，剩下的靠 `report` 唤醒。将来若发现 Worker
-崩溃时静默，再加**带硬超时**的 `wait`，而不是现在引入。
+唤醒只有两条路：**下级主动上报** + **系统兜底通知**。

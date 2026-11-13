@@ -34,5 +34,12 @@
     "json",
     "jsonc",
     "yaml"
+  ],
+  "python-envs.pythonProjects": [
+    {
+      "path": "src/utils",
+      "envManager": "ms-python.python:venv",
+      "packageManager": "ms-python.python:pip"
+    }
   ]
 }
