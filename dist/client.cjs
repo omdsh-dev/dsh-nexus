@@ -261,7 +261,7 @@ function Panel() {
 	const $ = (0, import_dist.c)(1);
 	let t0;
 	if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-		t0 = /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", { children: "Panel" });
+		t0 = /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {});
 		$[0] = t0;
 	} else t0 = $[0];
 	return t0;

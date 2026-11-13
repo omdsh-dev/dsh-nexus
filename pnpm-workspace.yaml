@@ -19,7 +19,7 @@ overrides:
 allowBuilds:
   '@prisma/engines': true
   esbuild: true
-  pkg-placeholder: true
+  dsh-nexus: true
   playwright: true
   prisma: true
   simple-git-hooks: true
