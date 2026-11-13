@@ -105,7 +105,11 @@ interface JobRecord {
 
 const nowIso = () => new Date().toISOString()
 const messageOf = (err: unknown) => err instanceof Error ? err.message : String(err)
-const parseId = (val: unknown) => typeof val === 'string' && val.trim() ? val.trim() : (() => { throw new TypeError('定时任务的 id 不能为空') })()
+function parseId(val: unknown) {
+  if (typeof val === 'string' && val.trim())
+    return val.trim()
+  throw new TypeError('定时任务的 id 不能为空')
+}
 const refId = (ref: JsonSchedulerJobRef) => parseId(typeof ref === 'string' ? ref : ref.id)
 
 function parseCron(val: unknown, id: string): string {
@@ -331,7 +335,9 @@ class JsonSchedulerImpl implements JsonScheduler {
 
   private report(error: unknown, context: JsonSchedulerErrorContext): void {
     if (this.options.onError) {
-      try { this.options.onError(error, context) }
+      try {
+        this.options.onError(error, context)
+      }
       catch {}
       return
     }

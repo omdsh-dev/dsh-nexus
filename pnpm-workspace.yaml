@@ -27,15 +27,22 @@ catalog:
   '@deepseek-ai/dsh-credentials': 0.0.1-rc.1
   '@deepseek-ai/dsh-session-query': 0.0.1-rc.1
   '@fileshed/kysely-node-sqlite': ^0.1.0
+  '@hairy/react-utils': ^1.1.0
+  '@reause/core': ^0.1.9
+  '@rolldown/plugin-babel': ^0.3.1
   '@types/react': 19.3.0
   '@types/react-dom': 19.3.0
+  '@vitejs/plugin-react': ^6.3.0
+  babel-plugin-react-compiler: ^1.0.0
   kysely: ^0.29.8
   kysely-migrate-sql: ^0.2.0
   kysely-model: ^0.1.0
   prisma: 7.10.1
   prisma-kysely: ^3.2.1
   react: 18.3.1
+  react-compiler-runtime: ^1.0.0
   react-dom: 18.3.1
+  react-if-lite: ^0.1.0
   tinyexec: ^1.3.1
 catalogs:
   cli:
@@ -50,7 +57,7 @@ catalogs:
     publint: ^0.3.21
     simple-git-hooks: ^2.13.1
     skills-npm: ^1.2.0
-    tsdown: ^0.22.12
+    tsdown: ^0.23.7
     tsx: ^4.23.1
     typescript: ^6.0.3
     vite: ^8.1.5
@@ -59,40 +66,40 @@ catalogs:
     '@deepseek-ai/cordis-plugin-group': 1.0.5
     '@deepseek-ai/cordis-plugin-include': 1.0.10
     '@deepseek-ai/cordis-plugin-loader': 1.0.6
-    '@deepseek-ai/dsh-agent': 0.2.1-rc.5
-    '@deepseek-ai/dsh-agent-default-model': 0.2.1-rc.5
-    '@deepseek-ai/dsh-agent-loop': 0.2.1-rc.5
-    '@deepseek-ai/dsh-agent-preset': 0.2.1-rc.5
-    '@deepseek-ai/dsh-agent-preset-registry': 0.2.1-rc.5
-    '@deepseek-ai/dsh-api-session-controller': 0.2.1-rc.5
-    '@deepseek-ai/dsh-api-workspace-controller': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-connection': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-locale': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-store': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-ui-conversation': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-ui-layout': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-ui-plugin-manager': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-ui-primitives': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-ui-renderer': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-ui-session': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-ui-settings': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-ui-sidebar': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-ui-slots': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-ui-theme': 0.2.1-rc.5
-    '@deepseek-ai/dsh-client-ui-workspace': 0.2.1-rc.5
-    '@deepseek-ai/dsh-host-webserver': 0.2.1-rc.5
-    '@deepseek-ai/dsh-llm': 0.2.1-rc.5
-    '@deepseek-ai/dsh-permission-presets': 0.2.1-rc.5
-    '@deepseek-ai/dsh-session': 0.2.1-rc.5
-    '@deepseek-ai/dsh-session-persistence': 0.2.1-rc.5
-    '@deepseek-ai/dsh-session-projection': 0.2.1-rc.5
-    '@deepseek-ai/dsh-skill-filesystem': 0.2.1-rc.5
-    '@deepseek-ai/dsh-tools': 0.2.1-rc.5
-    '@deepseek-ai/dsh-user-approval': 0.2.1-rc.5
-    '@deepseek-ai/dsh-user-questions': 0.2.1-rc.5
-    '@deepseek-ai/dsh-util-code-language': 0.2.1-rc.5
-    '@deepseek-ai/dsh-util-values': 0.2.1-rc.5
-    '@deepseek-ai/dsh-workspace': 0.2.1-rc.5
+    '@deepseek-ai/dsh-agent': 0.2.2-rc.2
+    '@deepseek-ai/dsh-agent-default-model': 0.2.2-rc.2
+    '@deepseek-ai/dsh-agent-loop': 0.2.2-rc.2
+    '@deepseek-ai/dsh-agent-preset': 0.2.2-rc.2
+    '@deepseek-ai/dsh-agent-preset-registry': 0.2.2-rc.2
+    '@deepseek-ai/dsh-api-session-controller': 0.2.2-rc.2
+    '@deepseek-ai/dsh-api-workspace-controller': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-connection': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-locale': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-store': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-ui-conversation': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-ui-layout': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-ui-plugin-manager': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-ui-primitives': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-ui-renderer': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-ui-session': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-ui-settings': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-ui-sidebar': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-ui-slots': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-ui-theme': 0.2.2-rc.2
+    '@deepseek-ai/dsh-client-ui-workspace': 0.2.2-rc.2
+    '@deepseek-ai/dsh-host-webserver': 0.2.2-rc.2
+    '@deepseek-ai/dsh-llm': 0.2.2-rc.2
+    '@deepseek-ai/dsh-permission-presets': 0.2.2-rc.2
+    '@deepseek-ai/dsh-session': 0.2.2-rc.2
+    '@deepseek-ai/dsh-session-persistence': 0.2.2-rc.2
+    '@deepseek-ai/dsh-session-projection': 0.2.2-rc.2
+    '@deepseek-ai/dsh-skill-filesystem': 0.2.2-rc.2
+    '@deepseek-ai/dsh-tools': 0.2.2-rc.2
+    '@deepseek-ai/dsh-user-approval': 0.2.2-rc.2
+    '@deepseek-ai/dsh-user-questions': 0.2.2-rc.2
+    '@deepseek-ai/dsh-util-code-language': 0.2.2-rc.2
+    '@deepseek-ai/dsh-util-values': 0.2.2-rc.2
+    '@deepseek-ai/dsh-workspace': 0.2.2-rc.2
   inlined:
     '@antfu/utils': ^9.3.0
   testing:

@@ -1,6 +1,6 @@
 import process from "node:process";
 import { defineTool } from "@deepseek-ai/dsh-tools";
-//#region src/utils/agent.ts
+// src/utils/agent.ts
 function definePreset(definition) {
 	const { tools, ...preset } = definition;
 	return {
@@ -15,8 +15,7 @@ function definePreset(definition) {
 		}
 	};
 }
-//#endregion
-//#region src/ai/_shared/plugins/index.ts
+// src/ai/_shared/plugins/index.ts
 const IS_WINDOWS = process.platform === "win32";
 const agentInstructions = {
 	id: "agent-instructions",
@@ -153,8 +152,7 @@ const toolPresent = {
 	id: "present",
 	name: "@deepseek-ai/dsh-tool-present"
 };
-//#endregion
-//#region src/ai/_shared/prompts/index.ts
+// src/ai/_shared/prompts/index.ts
 function getManagerSystemPrompt() {
 	return `你是某个仓库的项目编排。长驻，管这个仓库下所有任务。
 
@@ -283,8 +281,7 @@ CI 事件、自动化动作不需要你说「收到」。
 
 不要留一个没人接的后台进程就结束 —— 那等于把烂摊子丢给下一个会话。`;
 }
-//#endregion
-//#region src/ai/_shared/tools/channel.ts
+// src/ai/_shared/tools/channel.ts
 const read_channel = defineTool({
 	name: "read_channel",
 	description: "读渠道原文，靠 resource 路径前缀分发。返回 { items, next_offset, next_resource }，两条翻页轴都要跟完。",
@@ -346,8 +343,7 @@ const reply_channel = defineTool({
 		throw new Error("reply_channel 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/_shared/tools/communicate.ts
+// src/ai/_shared/tools/communicate.ts
 const answer = defineTool({
 	name: "answer",
 	description: "回答下面升上来的 ask：填 answer，标 status=done，答案送回发起方。",
@@ -377,8 +373,7 @@ const answer = defineTool({
 		throw new Error("answer 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/_shared/tools/inbox.ts
+// src/ai/_shared/tools/inbox.ts
 const inbox_list = defineTool({
 	name: "inbox_list",
 	description: "列出自己收件箱里 status=pending 的消息，按 createdAt 升序。",
@@ -423,8 +418,7 @@ const inbox_kill = defineTool({
 		throw new Error("inbox_kill 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/_shared/tools/ticket.ts
+// src/ai/_shared/tools/ticket.ts
 /**
 * 派票给项目编排。主编排和 Supervisor 都用这一份：
 * 两者都是「让某个项目编排就这张票做事」，写的也是同一条 Inbox。
@@ -498,8 +492,7 @@ const note_ticket = defineTool({
 		throw new Error("note_ticket 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/manager/tools/communicate.ts
+// src/ai/manager/tools/communicate.ts
 /**
 * 项目编排的 `report`：能带 supervisorId。
 * Worker 的 `report` 是另一个工具（没有 supervisorId，它不知道 Supervisor 存在），不要合并。
@@ -605,8 +598,7 @@ const escalate = defineTool({
 		throw new Error("escalate 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/manager/tools/supervisor.ts
+// src/ai/manager/tools/supervisor.ts
 /**
 * 项目编排的版本：本项目那张给明细，别人的只给数量。
 * 主编排的 `supervisor_list` 是另一个工具（全部字段可见），不要合并。
@@ -633,8 +625,7 @@ const supervisor_list$1 = defineTool({
 		throw new Error("supervisor_list 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/manager/tools/ticket.ts
+// src/ai/manager/tools/ticket.ts
 /**
 * 项目编排的版本：范围锁死在本项目。
 * 没有 projectId 参数 —— 你只能看自己的票，这和主编排的全局 `list_ticket` 是两个工具。
@@ -764,8 +755,7 @@ const retry_ticket = defineTool({
 		throw new Error("retry_ticket 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/manager/tools/worker.ts
+// src/ai/manager/tools/worker.ts
 const create_worker = defineTool({
 	name: "create_worker",
 	description: "给一张票开 Worker：建 worktree、切分支、起会话一次配好。并发满了就让它留在 queued。",
@@ -918,8 +908,7 @@ const rename = defineTool({
 		throw new Error("rename 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/manager/index.ts
+// src/ai/manager/index.ts
 const manager = definePreset({
 	id: "manager",
 	name: "Manager",
@@ -964,8 +953,7 @@ const manager = definePreset({
 		toolWeb
 	]
 });
-//#endregion
-//#region src/ai/orchestrator/prompts/index.ts
+// src/ai/orchestrator/prompts/index.ts
 function getOrchestratorSystemPrompt() {
 	return `你是 Nexus 的主编排。全局只有一个，管所有项目。
 
@@ -1015,8 +1003,7 @@ function getOrchestratorSystemPrompt() {
 会话结束前看一眼 inbox_list。还有 pending 就说明这一轮没做完，
 处理完再结束。不要留着自己也解释不清的未处理消息。`;
 }
-//#endregion
-//#region src/ai/orchestrator/tools/communicate.ts
+// src/ai/orchestrator/tools/communicate.ts
 const ask_user = defineTool({
 	name: "ask_user",
 	description: "问人。只有主编排能问 —— 它是唯一能触达人类的一层。",
@@ -1045,8 +1032,7 @@ const ask_user = defineTool({
 		throw new Error("ask_user 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/orchestrator/tools/supervisor.ts
+// src/ai/orchestrator/tools/supervisor.ts
 /**
 * 主编排的版本：全部字段可见。
 * 项目编排的 `supervisor_list` 是另一个工具（本项目那张给明细、别人的只给数量），不要合并。
@@ -1202,8 +1188,7 @@ const detach_tickets_from_supervisor = defineTool({
 		throw new Error("detach_tickets_from_supervisor 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/orchestrator/tools/thread.ts
+// src/ai/orchestrator/tools/thread.ts
 const triage_thread = defineTool({
 	name: "triage_thread",
 	description: "给一条还没票跟着的话题定归属。判一次就固定，之后不再打扰主编排。",
@@ -1305,8 +1290,7 @@ const unlink_thread = defineTool({
 		throw new Error("unlink_thread 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/orchestrator/tools/ticket.ts
+// src/ai/orchestrator/tools/ticket.ts
 const create_ticket = defineTool({
 	name: "create_ticket",
 	description: "开一张票。任务一旦存在，projectId 就必须确定。",
@@ -1389,8 +1373,7 @@ const list_ticket$1 = defineTool({
 		throw new Error("list_ticket 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/orchestrator/index.ts
+// src/ai/orchestrator/index.ts
 const orchestrator = definePreset({
 	id: "orchestrator",
 	name: "Orchestrator",
@@ -1436,8 +1419,7 @@ const orchestrator = definePreset({
 		toolWeb
 	]
 });
-//#endregion
-//#region src/ai/supervisor/tools/index.ts
+// src/ai/supervisor/tools/index.ts
 /**
 * Supervisor 的 `list_ticket`：只看自己关联的那几张，无参数。
 * 主编排的全局版、项目编排的本项目版都是另外的工具，不要合并。
@@ -1546,8 +1528,7 @@ const ask$1 = defineTool({
 		throw new Error("ask 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/supervisor/index.ts
+// src/ai/supervisor/index.ts
 const supervisor = definePreset({
 	id: "supervisor",
 	name: "Supervisor",
@@ -1585,8 +1566,7 @@ const supervisor = definePreset({
 		toolWeb
 	]
 });
-//#endregion
-//#region src/ai/worker/tools/index.ts
+// src/ai/worker/tools/index.ts
 /**
 * Worker 的 `report`：没有 supervisorId。
 * Worker 不知道 Supervisor 存不存在，也不该知道 —— 它只有一个去处：项目编排。
@@ -1652,8 +1632,7 @@ const ask = defineTool({
 		throw new Error("ask 尚未实现");
 	}
 });
-//#endregion
-//#region src/ai/index.ts
+// src/ai/index.ts
 const agents = {
 	manager,
 	orchestrator,
@@ -1690,8 +1669,7 @@ const agents = {
 		]
 	})
 };
-//#endregion
-//#region src/index.ts
+// src/index.ts
 const inject = [
 	"agentPresets",
 	"sessionController",
@@ -1707,11 +1685,11 @@ async function apply(ctx) {
 		return () => Promise.all(unregisters);
 	}, "nexus:presets");
 	ctx.on("agent/created", async ({ agent }) => {
-		const disposers = agents[agent.session.header.agentPreset].tools.map((t) => agent.ctx.tools.register(t));
+		const preset = agent.session.header.agentPreset;
+		const disposers = agents[preset].tools.map((t) => agent.ctx.tools.register(t));
 		ctx.on("agent/disposed", ({ agent: disposedAgent }) => {
 			disposedAgent === agent && disposers.forEach((d) => d());
 		});
 	});
 }
-//#endregion
 export { apply, inject };

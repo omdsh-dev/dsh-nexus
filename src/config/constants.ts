@@ -1,7 +1,15 @@
-import { homedir } from 'node:os'
-import { join } from 'node:path'
-import process from 'node:process'
+import type { MainPanelId } from '@deepseek-ai/dsh-client-ui-layout/client'
 
-export const DSH_HOME = process.env.DSH_HOME ?? join(homedir(), '.dsh')
+/**
+ * Client-safe constants only: this module is bundled into the browser Client
+ * artifact, so it must never import Node builtins. Host-only paths live in
+ * `./paths`.
+ */
 
-export const DSH_PLUGIN_HOME = `${DSH_HOME}/.nexus`
+export const PANEL_ID = 'dsh-nexus' as MainPanelId
+
+export const PLUGIN_ID = 'dsh-nexus' as const
+
+export const ENTRY = 'dsh-nexus' as const
+
+export const NS = 'dshNexus' as const
