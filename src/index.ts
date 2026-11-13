@@ -7,6 +7,7 @@ import type { } from '@deepseek-ai/dsh-session'
 import type { } from '@deepseek-ai/dsh-session-query'
 import type { } from '@deepseek-ai/dsh-workspace'
 
+import type { AgentPreset } from './utils/agent'
 import { agents } from './ai'
 
 export const inject = ['agentPresets', 'sessionController', 'workspaceRegistry', 'sessionQuery', 'credentials']
@@ -21,11 +22,15 @@ export async function apply(ctx: Context): Promise<void> {
   }, 'nexus:presets')
 
   ctx.on('agent/created', async ({ agent }) => {
-    const preset = agent.session.header.agentPreset
-    const tools = agents[preset as keyof typeof agents].tools
-    const disposers = tools.map(t => agent.ctx.tools.register(t))
-    ctx.on('agent/disposed', ({ agent: disposedAgent }) => {
-      disposedAgent === agent && disposers.forEach(d => d())
-    })
+    // 会话的预设不一定是我们的：内置预设也要正常开会话，认不出来就什么都不做。
+    const definition = agents[agent.session.header.agentPreset as keyof typeof agents] as AgentPreset | undefined
+    if (definition === undefined)
+      return
+
+    // 工具注册归会话自己的上下文，会话销毁时一起收走。
+    agent.ctx.effect(() => {
+      const disposers = definition.tools.map(tool => agent.ctx.tools.register(tool))
+      return () => disposers.forEach(dispose => dispose())
+    }, 'nexus:tools')
   })
 }

@@ -4,10 +4,16 @@
  * 为什么不用 desktop profile：它被 Electron 独占（`dsh --profile desktop` 直接报错），
  * 而且改坏了会影响正在用的 GUI。
  *
+ * 热更新靠两层，profile 里两行都是开着的：
+ *   - `hmr`（`@deepseek-ai/dsh-hmr`）：已链接包的构建产物一变，Host 插件就被换掉，不用重启；
+ *   - `client-hmr`（`@deepseek-ai/dsh-client-hmr`）：Client 模块热替换，页面不用刷新。
+ * 但这两层都只认**磁盘上已经变化的产物**，所以这里必须先开 watch 重建，否则改了源码
+ * `dist/` 不动，什么都不会热。
+ *
  * 用法：
- *   pnpm run dev:dsh           # 构建一次，然后起实例（默认打开浏览器）
- *   pnpm run dev:dsh --watch   # 同时跑 tsdown --watch，改完自动重建
- *   pnpm run dev:dsh --no-open # 不自动开浏览器
+ *   pnpm run dev:dsh            # 构建一次 + 持续 watch，然后起实例
+ *   pnpm run dev:dsh --once     # 只构建一次，不 watch
+ *   pnpm run dev:dsh --no-open  # 不自动开浏览器
  *
  * 环境变量：
  *   DSH_DEV_PROFILE   profile 名，默认 nexus-dev
@@ -26,7 +32,7 @@ const REPO_ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const PROFILE = process.env.DSH_DEV_PROFILE ?? 'nexus-dev'
 const PORT = process.env.DSH_DEV_PORT ?? '3091'
 const OPEN_BROWSER = !process.argv.includes('--no-open')
-const WATCH = process.argv.includes('--watch')
+const WATCH = !process.argv.includes('--once')
 
 interface PackageJson {
   name?: string
@@ -110,17 +116,18 @@ async function main(): Promise<void> {
   await ensureProfile()
   await ensureLinked()
 
+  // 先完整构建一次：watch 的首轮产物要等它自己编译，实例不该在空 dist 上启动。
+  await run('pnpm', ['run', 'build'])
+
   if (WATCH) {
-    // 先让它起来，后续源码改动由 tsdown 自己重建
+    // tsdown --watch 之后每次源码变动都会重写 dist/，由 DSH 的 hmr / client-hmr 接手。
     const watcher = x('pnpm', ['run', 'dev'], {
       nodeOptions: { cwd: REPO_ROOT, stdio: 'inherit' },
       persist: true,
     })
     if (watcher.process)
       children.push(watcher.process)
-  }
-  else {
-    await run('pnpm', ['run', 'build'])
+    console.log('[dev:dsh] watching sources; Host 与 Client 都由 DSH 热替换')
   }
 
   console.log(`[dev:dsh] booting profile "${PROFILE}" on http://127.0.0.1:${PORT}`)
@@ -131,6 +138,7 @@ process.on('SIGINT', () => {
   stopChildren()
   process.exit(0)
 })
+
 process.on('SIGTERM', () => {
   stopChildren()
   process.exit(0)

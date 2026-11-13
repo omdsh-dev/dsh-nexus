@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+/*
+ * 预设选择下拉的高度上限（330px，超出滚动）。
+ */
+body:has([data-slot='conversation.hero.agentPreset'] [aria-haspopup='menu'][aria-expanded='true']) > [role='menu'] {
+  max-height: 330px;
+}

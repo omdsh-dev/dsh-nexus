@@ -10,7 +10,7 @@ function definePreset(definition) {
 			plugins: [preset.instruction && {
 				id: "persona",
 				name: "@deepseek-ai/dsh-persona",
-				config: { persona: preset.instruction }
+				config: { prefix: preset.instruction }
 			}, ...preset.plugins ?? []].filter(Boolean)
 		}
 	};
@@ -911,8 +911,8 @@ const rename = defineTool({
 // src/ai/manager/index.ts
 const manager = definePreset({
 	id: "manager",
-	name: "Manager",
-	description: "",
+	name: "项目编排",
+	description: "一个仓库一个：派 Worker、看汇报、收尾，任务走到哪一步由它推。不写代码。",
 	instruction: getManagerSystemPrompt(),
 	order: 5,
 	tools: [
@@ -1376,9 +1376,9 @@ const list_ticket$1 = defineTool({
 // src/ai/orchestrator/index.ts
 const orchestrator = definePreset({
 	id: "orchestrator",
-	name: "Orchestrator",
+	name: "主编排",
 	instruction: getOrchestratorSystemPrompt(),
-	description: "",
+	description: "全局只有一个，管所有项目和渠道：分诊话题、开票派活、跨项目卡住时拉临时协调者。不写代码。",
 	order: 4,
 	tools: [
 		read_channel,
@@ -1531,9 +1531,9 @@ const ask$1 = defineTool({
 // src/ai/supervisor/index.ts
 const supervisor = definePreset({
 	id: "supervisor",
-	name: "Supervisor",
+	name: "临时协调者",
 	instruction: getSupervisorSystemPrompt(),
-	description: "",
+	description: "只在任务跨两个以上项目时临时拉起，协调依赖、对齐两边的结论，用完即弃。不写代码。",
 	order: 6,
 	tools: [
 		read_channel,
@@ -1639,9 +1639,9 @@ const agents = {
 	supervisor,
 	worker: definePreset({
 		id: "worker",
-		name: "Worker",
+		name: "执行会话",
 		instruction: getWorkerSystemPrompt(),
-		description: "",
+		description: "在一张任务专属的 worktree 里干活：改代码、跑测试、开 PR，用 report 汇报进度。",
 		order: 7,
 		tools: [
 			read_channel,
@@ -1685,11 +1685,12 @@ async function apply(ctx) {
 		return () => Promise.all(unregisters);
 	}, "nexus:presets");
 	ctx.on("agent/created", async ({ agent }) => {
-		const preset = agent.session.header.agentPreset;
-		const disposers = agents[preset].tools.map((t) => agent.ctx.tools.register(t));
-		ctx.on("agent/disposed", ({ agent: disposedAgent }) => {
-			disposedAgent === agent && disposers.forEach((d) => d());
-		});
+		const definition = agents[agent.session.header.agentPreset];
+		if (definition === void 0) return;
+		agent.ctx.effect(() => {
+			const disposers = definition.tools.map((tool) => agent.ctx.tools.register(tool));
+			return () => disposers.forEach((dispose) => dispose());
+		}, "nexus:tools");
 	});
 }
 export { apply, inject };

@@ -21,8 +21,10 @@ export function definePreset(definition: Omit<AgentDefinition, 'tools'> & { tool
         preset.instruction && {
           id: 'persona',
           name: '@deepseek-ai/dsh-persona',
+          // persona 行的 Config 是 `prefix` / `suffix` / `complete`，
+          // 传别的键会让这一行配置校验失败、整个预设被标成 broken。
           config: {
-            persona: preset.instruction,
+            prefix: preset.instruction,
           },
         },
         ...(preset.plugins ?? []),

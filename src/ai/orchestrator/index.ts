@@ -5,9 +5,9 @@ import * as tools from './tools'
 
 export const orchestrator = definePreset({
   id: 'orchestrator',
-  name: 'Orchestrator',
+  name: '主编排',
   instruction: getOrchestratorSystemPrompt(),
-  description: '',
+  description: '全局只有一个，管所有项目和渠道：分诊话题、开票派活、跨项目卡住时拉临时协调者。不写代码。',
   order: 4,
   tools: [
     sharedTools.channel.read_channel,

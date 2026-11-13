@@ -5,9 +5,9 @@ import * as tools from './tools'
 
 export const worker = definePreset({
   id: 'worker',
-  name: 'Worker',
+  name: '执行会话',
   instruction: getWorkerSystemPrompt(),
-  description: '',
+  description: '在一张任务专属的 worktree 里干活：改代码、跑测试、开 PR，用 report 汇报进度。',
   order: 7,
   tools: [
     sharedTools.channel.read_channel,

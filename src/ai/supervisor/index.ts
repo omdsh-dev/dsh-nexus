@@ -5,9 +5,9 @@ import * as tools from './tools'
 
 export const supervisor = definePreset({
   id: 'supervisor',
-  name: 'Supervisor',
+  name: '临时协调者',
   instruction: getSupervisorSystemPrompt(),
-  description: '',
+  description: '只在任务跨两个以上项目时临时拉起，协调依赖、对齐两边的结论，用完即弃。不写代码。',
   order: 6,
   tools: [
     sharedTools.channel.read_channel,

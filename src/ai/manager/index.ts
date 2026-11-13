@@ -5,8 +5,8 @@ import * as tools from './tools'
 
 export const manager = definePreset({
   id: 'manager',
-  name: 'Manager',
-  description: '',
+  name: '项目编排',
+  description: '一个仓库一个：派 Worker、看汇报、收尾，任务走到哪一步由它推。不写代码。',
   instruction: getManagerSystemPrompt(),
   order: 5,
   tools: [
