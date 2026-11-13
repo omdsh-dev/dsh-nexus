@@ -1,5 +1,5 @@
 - insert:
-    - id: pkg-placeholder
-      name: pkg-placeholder
+    - id: dsh-nexus
+      name: dsh-nexus
     - id: dsh-taiwind
       name: dsh-taiwind

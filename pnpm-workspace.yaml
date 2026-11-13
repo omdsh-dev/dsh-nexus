@@ -18,8 +18,8 @@ overrides:
   '@types/react-dom': 19.3.0
 allowBuilds:
   '@prisma/engines': true
-  esbuild: true
   dsh-nexus: true
+  esbuild: true
   playwright: true
   prisma: true
   simple-git-hooks: true

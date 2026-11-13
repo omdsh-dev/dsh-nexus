@@ -24,7 +24,7 @@ export const neverBundle = [
 export const clientNeverBundle = [...neverBundle, 'node:*']
 
 /** Client-safe dependencies that must be inlined into the Client artifact. */
-export const clientAlwaysBundle = [/^@reause\//, /^react-compiler-runtime$/]
+export const clientAlwaysBundle = [/^@reause\//, /^react-compiler-runtime$/, /^react-if-lite$/]
 
 const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')) as { name: string }
 const id = JSON.stringify(pkg.name)
