@@ -33,6 +33,9 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: pnpm run test -- --run
+        run: pnpm run test
+
+      - name: Test (E2E)
+        run: pnpm run test:e2e
         env:
           DSH_E2E_REQUIRED: '1'

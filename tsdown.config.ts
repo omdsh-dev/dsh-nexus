@@ -5,7 +5,6 @@ import process from 'node:process'
 import pluginBabel from '@rolldown/plugin-babel'
 import { reactCompilerPreset } from '@vitejs/plugin-react'
 import { defineConfig } from 'tsdown'
-import { StaleGuardRecorder } from 'tsdown-stale-guard'
 
 export const neverBundle = [
   'react',
@@ -35,7 +34,6 @@ const common: UserConfig = {
   outExtensions: () => ({ js: '.js' }),
   publint: true,
   deps: { neverBundle },
-  plugins: [StaleGuardRecorder()],
 }
 
 export default defineConfig([

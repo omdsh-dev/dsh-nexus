@@ -61,7 +61,8 @@ const linkSpec = `link:${REPO_ROOT.replace(/\\/gu, '/')}`
 async function run(command: string, args: string[]): Promise<void> {
   const result: Output = await x(command, args, {
     // inherit 而不是 pipe：沙箱下管道 stdio 会被拒绝，而且这里本来就要人看得到输出
-    nodeOptions: { cwd: REPO_ROOT, stdio: 'inherit' },
+    // windowsHide：Windows 上 spawn 默认会给子进程开一个新控制台窗口，这里要压掉
+    nodeOptions: { cwd: REPO_ROOT, stdio: 'inherit', windowsHide: true },
   })
   if (result.exitCode !== 0)
     throw new Error(`\`${command} ${args.join(' ')}\` exited ${result.exitCode}`)
@@ -122,7 +123,7 @@ async function main(): Promise<void> {
   if (WATCH) {
     // tsdown --watch 之后每次源码变动都会重写 dist/，由 DSH 的 hmr / client-hmr 接手。
     const watcher = x('pnpm', ['run', 'dev'], {
-      nodeOptions: { cwd: REPO_ROOT, stdio: 'inherit' },
+      nodeOptions: { cwd: REPO_ROOT, stdio: 'inherit', windowsHide: true },
       persist: true,
     })
     if (watcher.process)
