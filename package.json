@@ -48,6 +48,7 @@
     "genapi": "genapi",
     "build": "tsdown",
     "dev": "tsdown --watch",
+    "dev:dsh": "tsx scripts/dev-dsh.ts",
     "lint": "eslint",
     "prepack": "nr build",
     "release": "bumpp",
@@ -62,6 +63,7 @@
   "scripts-info": {
     "build": "Build the library for publishing",
     "dev": "Rebuild on change during development",
+    "dev:dsh": "Boot a dev DSH instance with this plugin linked",
     "lint": "Check for code style issues",
     "prepack": "Build before publishing",
     "release": "Bump version and publish a release",
@@ -72,6 +74,7 @@
   },
   "dependencies": {
     "@fileshed/kysely-node-sqlite": "catalog:",
+    "croner": "catalog:utils",
     "dsh-h3": "catalog:utils",
     "dsh-taiwind": "catalog:utils",
     "h3": "catalog:utils",

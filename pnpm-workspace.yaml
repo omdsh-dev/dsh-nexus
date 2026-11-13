@@ -104,6 +104,7 @@ catalogs:
   types:
     '@types/node': ^26.1.1
   utils:
+    croner: ^11.0.0
     dsh-h3: ^0.2.2
     dsh-taiwind: ^0.3.3
     h3: ^2.0.8

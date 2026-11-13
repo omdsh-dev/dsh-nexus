@@ -225,6 +225,9 @@ catalogs:
       specifier: ^26.1.1
       version: 26.1.1
   utils:
+    croner:
+      specifier: ^11.0.0
+      version: 11.0.0
     dsh-h3:
       specifier: ^0.2.2
       version: 0.2.2
@@ -246,6 +249,9 @@ importers:
       '@fileshed/kysely-node-sqlite':
         specifier: 'catalog:'
         version: 0.1.0(kysely@0.29.8)
+      croner:
+        specifier: catalog:utils
+        version: 11.0.0
       dsh-h3:
         specifier: catalog:utils
         version: 0.2.2(@deepseek-ai/cordis@4.0.5)(@deepseek-ai/dsh-host-webserver@0.2.1-rc.5(@deepseek-ai/cordis@4.0.5))(@genapi/shared@4.1.4)(typescript@6.0.3)
@@ -2972,6 +2978,10 @@ packages:
 
   core-js-compat@3.49.0:
     resolution: {integrity: sha512-VQXt1jr9cBz03b331DFDCCP90b3fanciLkgiOoy8SBHy06gNf+vQ1A3WFLqG7I8TipYIKeYK9wxd0tUrvHcOZA==}
+
+  croner@11.0.0:
+    resolution: {integrity: sha512-T17ADjdttrVToyzLpLq9Xb9xzcMwpQ/M3Qs9szhh0MVNTbv6NWQ9OFYa2qlzPYXFMn+uoDlnW1IpIv6cAvFtyA==}
+    engines: {node: '>=18.0'}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -7177,6 +7187,8 @@ snapshots:
   core-js-compat@3.49.0:
     dependencies:
       browserslist: 4.28.2
+
+  croner@11.0.0: {}
 
   cross-spawn@7.0.6:
     dependencies:
