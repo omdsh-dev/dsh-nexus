@@ -105,7 +105,7 @@ export interface ShellScaffold {
  * 早先只给 15s，首次跑正好卡在边界上，于是拿不到 token、报「untrusted URL」。
  * CI 上的老版本不打印这个 URL，会白等这段，所以别调太大。
  */
-const LAUNCH_URL_GRACE_MS = Number(process.env.DSH_E2E_LAUNCH_URL_GRACE_MS ?? 45_000)
+const LAUNCH_URL_GRACE_MS = Number(process.env.DSH_E2E_LAUNCH_URL_GRACE_MS ?? 60_000)
 
 export async function openShellPage(page: Page, scaffold: Pick<ShellScaffold, 'baseUrl' | 'processLaunchUrl'>): Promise<void> {
   const exchange = await exchangeProcessLaunchToken(scaffold.baseUrl, scaffold.processLaunchUrl)
@@ -143,16 +143,22 @@ export async function launchShell(): Promise<ShellScaffold> {
   const port = await freePort()
   const baseUrl = `http://127.0.0.1:${port}`
   const cwd = process.env.DSH_E2E_DSH_CWD ?? REPO_ROOT
+  /**
+   * 不能用 `persist`，也不能传 `detached`。
+   *
+   * 两者都会让子进程脱离父控制台，Windows 上 stdout 直接丢光（实测 0 字节），
+   * 于是读不到 `dsh web: …?token=…`，报「untrusted launch URL」。POSIX 上
+   * 早先靠 detached 才收得到，实际是 Windows 特有的坑；统一用前台子进程，
+   * 收尾时按 pid 杀整个进程树。
+   */
   const processResult = x(command, ['--profile', profile, '--port', String(port), '--no-open'], {
     nodeOptions: {
       cwd,
       env: shellEnv(),
       stdio: ['ignore', 'pipe', 'pipe'],
-      detached: process.platform !== 'win32',
       // .cmd 包装器会自己开一个控制台窗口，压掉。
       windowsHide: true,
     },
-    persist: true,
   })
   const child = processResult.process
   if (!child)
