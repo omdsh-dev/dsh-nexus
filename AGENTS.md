@@ -2,52 +2,67 @@
 
 > 首次工作前运行 `pnpm install --frozen-lockfile`；CI 与本地 E2E 需要预装 `@deepseek-ai/dsh` CLI 和 Playwright Chromium。
 
-## 项目结构
+## Workspace Routing & Context Guidelines
 
-DSH 插件采用 Host / Client 双构建，最终产物与浏览器加载入口以 `package.json`、`tsdown.config.ts`、`cordis.patch.yml` 为准。
+在执行代码分析、优化、重构或单测编写前，必须根据修改对象的**路径、业务域与环境**，主动读取并叠加遵循对应的规范文档：
 
-- `src/index.ts`：Host 插件挂载入口；Host 侧共享类型放 `src/types.ts`，共享常量放 `src/constants.ts`。
-- `src/server/index.ts`：通过 `defineWebServer` 定义服务入口。
-- `src/server/routes/*.[get|post|put|...].ts`：dsh-h3 HTTP 路由，按方法拆分文件。
-- `src/client/index.ts`：Client 插件挂载入口。
-- `src/client/components/`：唯一集中存放 React 组件的位置，禁止在其他模块分散定义组件。
-- `src/client/components/official.ts`：集中导出 DeepSeek 官方组件。
-- 新增图标统一放 `src/client/components/icons.tsx`；客户端共享类型放 `src/client/types.ts`，共享常量放 `src/client/constants.ts`。
-- `src/main.css`：保留未编译的 dsh-taiwind / tailwind 入口；Client 样式类名在 `src/client/*` 内编写。
-- `test/`：Vitest、API 快照与 Playwright E2E 测试。
-- `test/e2e/**/*.{test,spec}.{ts,tsx}`：真实浏览器 E2E 测试；普通 Vitest 文件后缀即可，不要求 `.e2e.ts`。
-- `test/__setup__/shell.ts`：启动真实 DSH shell、构建/安装插件、交换 Cookie、注入浏览器会话并清理临时环境。
-- `dist/`：构建产物，不手写修改。
-- `vitest.config.ts`：Unit 与 E2E project 入口；`vitest.e2e.config.ts` 负责 E2E project。
-- `.github/workflows/ci.yml`：仅复用 `sxzz/workflows/.github/workflows/unit-test.yml@main`。
+### 1. 规范矩阵与路由表 (Specification Routing Matrix)
 
-## 编码与目录约束
+| 修改范围 / 触发条件 | 业务场景 / 对应模块 | 必须参照的规范文档 |
+| :--- | :--- | :--- |
+| **基础通用** | 所有代码修改 | `docs/specs/devlopment.md` |
+| **测试标准** | 通用 Unit Test、E2E 集成测试断言与结构 | `docs/specs/testing.md` |
+| **插件 - 客户端核心** | 插件 Client 通信、状态管理与客户端逻辑 | `docs/specs/plugin.client.md` |
+| **插件 - 宿主核心** | 宿主进程管理、插件加载器、沙箱隔离 | `docs/specs/plugin.host.md` |
+| **插件 - 宿主服务** | 宿主系统级 Service、底座 API 实现 | `docs/specs/plugin.host.service.md` |
 
-- TypeScript `strict`、ESM、pnpm；依赖版本统一由 `pnpm-workspace.yaml` catalog 管理，相对路径导入，显式导入类型与常量。
-- 遵循 `@antfu/eslint-config`，不使用 Prettier；React 文件统一 kebab-case（如 `extension-panel.tsx`），优先复用 DeepSeek Harness 官方组件。
-- Client 状态优先使用官方 `@deepseek-ai/dsh-client-store`；不得私建替代 Store、绕过官方 context/store 生命周期或另写协议适配层。
-- 命令执行使用 `tinyexec` 的异步 `x(...)`；禁止新增同步 child-process 调用和手工拼接 shell 命令。
-- `@deepseek-ai/dsh` 是 E2E 测试运行时 CLI，不是项目 bundle 依赖；本地由 PATH 或 `DSH_E2E_DSH` / `DSHM_E2E_DSH` 提供。
-- 依赖生命周期由 `postinstall` 执行 `skills-npm` 与 `pnpx skills experimental_install`；`prepare` 负责 Git hooks。
-- 跨文件类型、常量、协议字符串必须集中归档；组件只消费常量，不私设协议字符串或重复定义共享结构。
-- Git、文件、进程 API 仅限 Host half；HTTP 路由严格限制方法并校验来源与权限。
+### 2. 规范叠加与优先级 (Specification Stacking Rules)
 
-## Slot、样式与安全
+- **通用基础**：`docs/specs/devlopment.md` 为全局必须叠加的基础规范。
 
-- Slot 使用 `constants.ts` 中的稳定 `name`、`id`、`registrant`、`order`、`priority`；初始化或挂载失败时必须 graceful fallback，禁止白屏。
-- 样式使用单一 style 标签并完整注册/调用 disposer 清理；不存在样式时不得残留空标签或重复注入。
-- 破坏性 Git 操作必须原子化，并逐步校验结果：禁止静默覆盖用户分支或未提交改动；未知 session 禁止回退到 `process.cwd()`。
-- E2E Cookie 交换必须校验 DSH 启动 URL、origin、redirect、`Set-Cookie` 与安全属性；浏览器 Cookie 与 HTTP API cookie 必须保持一致。
-- Playwright E2E 使用 `chromium`、临时 `DSH_HOME`、独立 `web` profile；启动 URL 与 token 不写入日志或页面 URL；禁止进程与子进程残留。
-- 接入官方能力时优先公开 API 与当前安装版本 `.d.ts`；其次才可用 MutationObserver 监听稳定的 `aria-label` / `role`，禁止依赖 CSS module 哈希。
-- 无法安全接入时明确报错并禁用功能，禁止半工作状态；扩展相关契约、文档和测试需同步更新。
+## 沟通与评论规范 (Reply & Comment Rules)
 
-## E2E 与 CI
+回复用户、以及在 issue / PR 下留言时，一律适用：
 
-- Vitest unit project 匹配 `test/**/*.test.ts` 并排除 `test/e2e/**`；E2E project 匹配 `test/e2e/**/*.test.ts`、`*.spec.ts`、`*.test.tsx`、`*.spec.tsx`，串行执行。
-- DSH 缺失时默认跳过 E2E；设置 `DSH_E2E_REQUIRED=1` 或 `DSHM_E2E_REQUIRED=1` 时必须失败。
-- CI 通过 reusable workflow 运行 Ubuntu / Node 24，并由该 workflow 的 `build` 输入预装 `@deepseek-ai/dsh@0.2.1-rc.5`、Playwright Chromium 和项目产物。
-- `pnpm-workspace.yaml` 的 `allowBuilds` 需允许项目及测试依赖实际执行的 lifecycle scripts；Playwright 与 DSH profile 安装不得因 ignored build scripts 静默失败。
+1. **短。先给结论**：
+   - 默认三五句说完。不写小标题、不写表格、不写清单堆砌；只有用户明确要「详细/完整报告」时才展开。
+   - 不复述刚跑过的命令、文件清单或工具输出，用户不关心过程。
+2. **说人话，不要 AI 腔**：
+   - 禁止「综上所述」「值得注意的是」「希望能帮到你」这类套话，禁止 emoji 装饰与 ✅🎉 式排版。
+   - 正文用中文；仅代码、命令、标识符与官方术语保留英文，不要中英夹杂堆术语。
+3. **不刷屏**：
+   - 同一话题只留一条评论/一条回复。写长了或写错了，原地编辑（`gh api --method PATCH`），不要补发第二条。
+   - 链接与代码块只留必要的那一两条，堆参考链接视为噪音。
+4. **结论要能落地**：
+   - 推荐方案必须给一条可直接复制的命令，并诚实标注限制：不支持、已失效、只是缓解，都要写清楚。
+   
+## 最高优先级 (Strict Guidelines)
+
+1. **极致代码精简与注释策略**：
+   - **0 注释原则**：编写/重构代码时必须保持 **0 注释**，仅允许在极难通过代码自解释的**关键节点/复杂算法**添加微量注释。
+   - **清理冗余**：优化时若发现代码中存在大面积文档描述、历史残余注释或冗余代码，应主动清理/精简，提升干净度。
+2. **临时草稿区**：
+   - 若需要临时记录、存放中间分析过程或草稿，可随意在 `.temp` 文件中编写（该文件下拥有绝对自由度）。
+3. **插件开发保护**：
+   - 在处理或重构插件相关代码时，**切勿执行构建（Build）命令**（用户可能正处于 Dev 开发热重载状态）。
+
+---
+
+## Command Performance Constraints (Strictly Enforced)
+
+执行文件查找或代码检索时，必须遵守极速命令约束，避免触发低效遍历：
+
+1. **FORBIDDEN POWERSHELL COMMANDS:**
+   - **NEVER** use `Get-ChildItem -Recurse` or `dir -s` to search files/directories.
+   - **NEVER** use `Select-String -Path` for recursive text searches.
+
+2. **FAST ALTERNATIVES (MANDATORY):**
+   - **Searching text in files:** Use `rg "pattern"` (ripgrep).
+   - **Finding files by name/path:** Use `fd <pattern>` or `git ls-files | Select-String "pattern"`.
+   - **Listing top-level directory items:** Use simple `Get-ChildItem` (NO `-Recurse`).
+
+3. **GIT PROJECT EXEMPTION:**
+   - Always leverage Git index if available: `git ls-files` is exponentially faster than PowerShell directory traversal.
 
 ## 验证
 
@@ -57,5 +72,4 @@ DSH 插件采用 Host / Client 双构建，最终产物与浏览器加载入口�
 pnpm run lint --fix
 pnpm run typecheck
 pnpm run test -- --run
-pnpm run build
 ```
