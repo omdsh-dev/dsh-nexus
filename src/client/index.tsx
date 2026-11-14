@@ -1,13 +1,15 @@
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
+import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 
 import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
 import type { ClientContext } from './types/context'
 import { NS, PANEL_ID } from '../config/constants'
+import { NexusIcon } from './components/icons'
 import { PluginContext } from './config/context'
 import { dicts } from './locale'
-import { Panel, PanelIcon } from './panel'
+import { Panel } from './panel'
 import { store } from './store'
 
 export const inject = ['slots', 'locale', 'sessions', 'uiWorkspace']
@@ -48,6 +50,6 @@ export function apply(ctx: ClientContext): void {
       label: () => t('panel'),
       locale: NS,
     },
-    PanelIcon,
+    ({ size }) => <NexusIcon width={size} height={size} />,
   ))
 }

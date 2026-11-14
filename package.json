@@ -26,6 +26,8 @@
     "README.md",
     "cordis.patch.yml",
     "dist",
+    "src/client/components/icons.licenses.md",
+    "src/client/components/icons.sources.md",
     "src/main.css"
   ],
   "dsh": {
@@ -84,7 +86,8 @@
     "dsh-taiwind": "catalog:utils",
     "kysely": "catalog:database",
     "kysely-model": "catalog:database",
-    "react-if-lite": "catalog:react"
+    "react-if-lite": "catalog:react",
+    "recharts": "catalog:react"
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:cli",
@@ -140,6 +143,7 @@
     "babel-plugin-react-compiler": "catalog:cli",
     "bumpp": "catalog:cli",
     "eslint": "catalog:cli",
+    "immer": "catalog:testing",
     "nano-staged": "catalog:cli",
     "playwright": "catalog:testing",
     "prisma": "catalog:database",
@@ -154,7 +158,8 @@
     "tsx": "catalog:cli",
     "typescript": "catalog:cli",
     "vite": "catalog:cli",
-    "vitest": "catalog:testing"
+    "vitest": "catalog:testing",
+    "zustand": "catalog:testing"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm i --frozen-lockfile --ignore-scripts --offline && pnpm run build && npx nano-staged"

@@ -94,10 +94,13 @@ catalogs:
     react: 18.3.1
     react-compiler-runtime: ^1.0.0
     react-if-lite: ^0.1.0
+    recharts: ^3.10.1
   testing:
     '@vitest/browser-playwright': ^4.1.10
+    immer: ^10.2.0
     playwright: ^1.62.1
     vitest: ^4.1.12
+    zustand: ~4.5.7
   types:
     '@types/node': ^26.1.1
     '@types/react': 19.3.0
