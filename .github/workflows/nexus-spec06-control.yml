@@ -1,0 +1,32 @@
+name: spec06-20261116-1647-content-control
+on:
+  pull_request:
+    branches:
+      - nexus-test/base-spec06-20261116-1647
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+jobs:
+  content-control:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify real control content
+        run: node -e "if(require('node:fs').readFileSync('nexus-test-head-control.txt','utf8')!=='control-head-A'+String.fromCharCode(10))process.exit(1)"
+      - name: Record real bot context without granting authority
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runId = 'spec06-20261116-1647'
+            const pr = context.payload.pull_request
+            if (pr.base.ref !== 'nexus-test/base-' + runId || pr.head.ref !== 'nexus-test/control-' + runId || !pr.title.includes(runId)) throw new Error('Not this run control PR')
+            const comments = await github.rest.issues.listComments({ ...context.repo, issue_number: pr.number, per_page: 100 })
+            const managed = comments.data.find(row => row.user.id === 122662527 && row.body.includes('<!-- nexus:'))
+            const ask = managed?.body.match(/askId: (ask-[a-f0-9]+)/)?.[1]
+            const marker = '<!-- spec06-20261116-1647:bot-control -->'
+            const body = marker + String.fromCharCode(10) + (ask ? '回答 ' + ask + '：allow_merge' : 'This is real GitHub Actions bot context for this run, not authorization for new work.')
+            const previous = comments.data.find(row => row.user.type === 'Bot' && row.body.includes(marker))
+            if (previous) await github.rest.issues.updateComment({ ...context.repo, comment_id: previous.id, body })
+            else await github.rest.issues.createComment({ ...context.repo, issue_number: pr.number, body })
